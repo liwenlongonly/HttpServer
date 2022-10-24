@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# IDE
+.idea
+
+/cmake-build*
+!/workflow/lib/*
