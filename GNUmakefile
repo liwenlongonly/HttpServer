@@ -8,14 +8,19 @@ CMAKE3 := $(shell if which cmake3>/dev/null ; then echo cmake3; else echo cmake;
 
 .PHONY: $(ALL_TARGETS)
 
-all:
+all: base
+	make -C $(BUILD_DIR) -f Makefile
+
+base:
 	mkdir -p $(BUILD_DIR)
 ifeq ($(DEBUG),y)
 	cd $(BUILD_DIR) && $(CMAKE3) -D CMAKE_BUILD_TYPE=Debug $(ROOT_DIR)
 else
 	cd $(BUILD_DIR) && $(CMAKE3) $(ROOT_DIR)
 endif
-	make -C $(BUILD_DIR) -f Makefile
+
+install preinstall package: base
+	make -C $(BUILD_DIR) -f Makefile $@
 
 clean:
 ifeq ($(MAKE_FILE), $(wildcard $(MAKE_FILE)))
