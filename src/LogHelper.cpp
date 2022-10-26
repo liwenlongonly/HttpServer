@@ -23,7 +23,7 @@ std::shared_ptr<spdlog::logger> LogHelper::createLogger(const std::string &tag, 
     sink1->set_pattern("[%Y-%m-%d %H:%M:%S.%e][%L][%t]->%v");
     sink1->set_level(spdlog::level::debug);
 
-    auto sink2 = std::make_shared<spdlog::sinks::rotating_file_sink_st>(log_path, 1024 * 1024 * config->log_max_size_mb, config->log_max_count);
+    auto sink2 = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(log_path, 1024 * 1024 * config->log_max_size_mb, config->log_max_count);
     sink2->set_pattern("[%Y-%m-%d %H:%M:%S.%e][%L][%t]->%v");
     sink2->set_level(spdlog::level::info);
 
