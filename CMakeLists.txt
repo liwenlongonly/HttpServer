@@ -4,7 +4,7 @@ project(HttpServer)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(LIB_DIR ${PROJECT_SOURCE_DIR}/workflow/lib)
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 
@@ -17,18 +17,23 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH ${LIB_DIR} ./lib)
 
-include_directories(${PROJECT_SOURCE_DIR}/workflow/include)
-include_directories(${PROJECT_SOURCE_DIR}/src/*.h)
-include_directories(${PROJECT_SOURCE_DIR}/include/)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/3rdpart/jansson-2.14)
+
+message(FATA_INFO, ${PROJECT_SOURCE_DIR}/include)
 
 link_directories(${LIB_DIR})
 
-file(GLOB _Source ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
+file(GLOB _Source ${PROJECT_SOURCE_DIR}/src/*.cpp
+                  ${PROJECT_SOURCE_DIR}/src/*.c
+                  ${PROJECT_SOURCE_DIR}/3rdpart/jansson-2.14/*.c
+                   )
 
 find_library(LIBRT rt)
 find_package(OpenSSL REQUIRED)
 
-set(WORKFLOW_LIB workflow pthread OpenSSL::SSL OpenSSL::Crypto ${LIBRT})
+set(WORKFLOW_LIB workflow jansson pthread OpenSSL::SSL OpenSSL::Crypto ${LIBRT})
 
 set(TARGET_NAME HttpServer)
 

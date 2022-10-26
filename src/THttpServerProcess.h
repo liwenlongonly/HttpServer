@@ -7,6 +7,7 @@
 
 #include "workflow/WFHttpServer.h"
 #include "macro_definition.h"
+#include <memory>
 
 namespace spdlog {
     class logger;
