@@ -4,6 +4,8 @@
 
 #include "THttpServerProcess.h"
 #include "workflow/URIParser.h"
+#include "LogHelper.h"
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -12,6 +14,8 @@
 #include <string>
 
 #define MAX_SIZE (PATH_MAX+1)
+
+NS_BEGIN
 
 static std::string getCurrentRealPath(){
     char current_absolute_path[MAX_SIZE] = {0};
@@ -24,25 +28,29 @@ static std::string getCurrentRealPath(){
 }
 
 THttpServerProcess::THttpServerProcess() {
-
+    http_log_ = spdlog::get(HTTP_LOG_NAME);
 }
 
 THttpServerProcess::~THttpServerProcess() {
 
 }
 
-void THttpServerProcess::process(WFHttpTask *task) {
+void THttpServerProcess::Process(WFHttpTask *task) {
     protocol::HttpRequest *req = task->get_req();
     protocol::HttpResponse *resp = task->get_resp();
-
+    if(aop_){
+        aop_->before(req, resp);
+    }
     const std::string method(req->get_method());
 
     const std::string &host = "172.0.0.1";
     std::string request_uri = "http://" + host + req->get_request_uri();  // or can't parse URI
+
     ParsedURI uri;
-    if (URIParser::parse(request_uri, uri) < 0)
-    {
+    if (URIParser::parse(request_uri, uri) < 0){
         resp->append_output_body("url parse error!");
+        http_log_->error("url parse error!");
+        resp->set_status_code("503");
         return;
     }
 
@@ -53,10 +61,12 @@ void THttpServerProcess::process(WFHttpTask *task) {
     else
         route = "/";
 
+    std::string respStr;
+
     if(method == "GET"){
         auto process = get_process_map_.find(route);
         if(process != get_process_map_.end()){
-            process->second(task, req, resp);
+            respStr = process->second(task, req, resp);
         } else{
             for (auto &item:static_path_map_) {
                 if(route.rfind(item.first, 0) == 0){
@@ -66,24 +76,28 @@ void THttpServerProcess::process(WFHttpTask *task) {
             }
             auto process = get_process_map_.find(route);
             if(process != get_process_map_.end()){
-                process->second(task, req, resp);
+                respStr = process->second(task, req, resp);
             } else{
                 char msg[128] = {};
                 sprintf(msg, "http get path: %s not find", route.c_str());
-                resp->append_output_body(msg);
-                return;
+                resp->set_status_code("404");
+                respStr = msg;
             }
         }
     } else if(method == "POST"){
         auto process = post_process_map_.find(route);
         if(process != post_process_map_.end()){
-            process->second(task, req, resp);
+            respStr = process->second(task, req, resp);
         } else{
             char msg[128] = {};
             sprintf(msg, "http post path: %s not find", route.c_str());
-            resp->append_output_body(msg);
-            return;
+            resp->set_status_code("404");
+            respStr = msg;
         }
+    }
+    resp->append_output_body(respStr);
+    if(aop_){
+        aop_->after(req, resp, respStr);
     }
 }
 
@@ -95,18 +109,19 @@ void  THttpServerProcess::POST(const std::string &path, const TaskProcess &proce
     post_process_map_[path] = std::move(process);
 }
 
-void THttpServerProcess::STATIC(std::basic_string<char> path, std::basic_string<char> abs_path) {
+void THttpServerProcess::STATIC(std::string path, std::string abs_path) {
 
     static_path_map_[path] = abs_path;
 
-    auto process = [path, abs_path](WFHttpTask * server_task, protocol::HttpRequest *req, protocol::HttpResponse *resp){
+    auto process = [path, abs_path](WFHttpTask * server_task, protocol::HttpRequest *req, protocol::HttpResponse *resp)->std::string{
 
         const std::string &host = "172.0.0.1";
         std::string request_uri = "http://" + host + req->get_request_uri();  // or can't parse URI
         ParsedURI uri;
         if (URIParser::parse(request_uri, uri) < 0){
             resp->append_output_body("url parse error!");
-            return;
+            resp->set_status_code("503");
+            return "url parse error!";
         }
         std::string rpath(uri.path);
         rpath = rpath.replace(rpath.find(path.c_str()), path.length(), abs_path.c_str());
@@ -146,7 +161,15 @@ void THttpServerProcess::STATIC(std::basic_string<char> path, std::basic_string<
         }else{
             resp->set_status_code("404");
             resp->append_output_body("<html>404 Not Found.</html>");
+            return "<html>404 Not Found.</html>";
         }
+        return "";
     };
     get_process_map_[path] = std::move(process);
 }
+
+void THttpServerProcess::Use(std::shared_ptr<AOP> aop) {
+    aop_ = aop;
+}
+
+NS_END
