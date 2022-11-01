@@ -9,8 +9,12 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 
-#define MIAN_LOG_NAME "MianLog"
+#define MAIN_LOG_NAME "MianLog"
 #define HTTP_LOG_NAME "HttpLog"
+#define MAIN_LOG_FILE "Logs/mianLog.log"
+#define HTTP_LOG_FILE "Logs/httpLog.log"
+
+#define GET_LOGGER(name) spdlog::get(name)
 
 NS_BEGIN
 

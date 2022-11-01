@@ -17,4 +17,13 @@
 #define NS
 #endif
 
+// To free the p and set to NULL.
+// @remark The p must be a pointer T*.
+#define srs_freep(p) \
+    if (p) { \
+        free(p); \
+        p = NULL; \
+    } \
+    (void)0
+
 #endif //HTTPSERVER_MACRO_DEFINITION_H

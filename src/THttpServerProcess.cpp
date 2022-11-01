@@ -21,14 +21,15 @@ static std::string getCurrentRealPath(){
     char current_absolute_path[MAX_SIZE] = {0};
     //获取当前目录绝对路径
     if (NULL == realpath("./", current_absolute_path)){
-        printf("get real path error!\n");
+        auto http_log = GET_LOGGER(HTTP_LOG_NAME);
+        http_log->error("get real path error!");
     }
     strcat(current_absolute_path, "/");
     return current_absolute_path;
 }
 
 THttpServerProcess::THttpServerProcess() {
-    http_log_ = spdlog::get(HTTP_LOG_NAME);
+    http_log_ = GET_LOGGER(HTTP_LOG_NAME);
 }
 
 THttpServerProcess::~THttpServerProcess() {

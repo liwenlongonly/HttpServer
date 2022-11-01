@@ -33,16 +33,16 @@ public:
 };
 
 __attribute__((constructor)) void init(void){
-    LogHelper::createLogger(MIAN_LOG_NAME, "Logs/mianLog.log");
-    LogHelper::createLogger(HTTP_LOG_NAME, "Logs/httpLog.log");
+    LogHelper::createLogger(MAIN_LOG_NAME, MAIN_LOG_FILE);
+    LogHelper::createLogger(HTTP_LOG_NAME, HTTP_LOG_FILE);
 }
 
 int main(){
 
     auto config = Singleton<GlobalConfig>::instance();
 
-    auto mianLogger = spdlog::get(MIAN_LOG_NAME);
-    auto httpLogger = spdlog::get(HTTP_LOG_NAME);
+    auto mianLogger = GET_LOGGER(MAIN_LOG_NAME);
+    auto httpLogger = GET_LOGGER(HTTP_LOG_NAME);
 
     static WFFacilities::WaitGroup wait_group(1);
 
@@ -70,14 +70,14 @@ int main(){
             json_decref(pRoot);
         }
         // 返回数据
-        char *result;
+        char * result = nullptr;
         json_t* jsonObject = json_object();
         json_object_set_new(jsonObject, "name", json_string("ilong"));
         json_object_set_new(jsonObject, "age", json_string("18"));
         json_object_set_new(jsonObject, "sex", json_integer(1));
         result = json_dumps(jsonObject, JSON_PRESERVE_ORDER);
         std::string jsonStr(result);
-        free(result);
+        srs_freep(result);
         json_decref(jsonObject);
 
         return jsonStr;
