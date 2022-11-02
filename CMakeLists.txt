@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(HttpServer)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 
@@ -31,9 +31,12 @@ file(GLOB _Source ${PROJECT_SOURCE_DIR}/src/*.cpp
                    )
 
 find_library(LIBRT rt)
-find_package(OpenSSL REQUIRED)
 
-set(WORKFLOW_LIB workflow jansson pthread OpenSSL::SSL OpenSSL::Crypto ${LIBRT})
+message(FATA_INFO, ${LIBRT})
+
+#find_package(OpenSSL REQUIRED)
+
+set(WORKFLOW_LIB workflow jansson pthread ssl crypto ${LIBRT})
 
 set(TARGET_NAME HttpServer)
 
