@@ -9,7 +9,7 @@ CMAKE3 := $(shell if which cmake3>/dev/null ; then echo cmake3; else echo cmake;
 .PHONY: $(ALL_TARGETS)
 
 all: base
-	make -C $(BUILD_DIR) -f Makefile
+	make -C $(BUILD_DIR) -f Makefile -j8
 
 base:
 	mkdir -p $(BUILD_DIR)
